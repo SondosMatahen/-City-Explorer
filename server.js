@@ -18,7 +18,7 @@ app.get('/',(request,response)=>{
 
 
 //route 1
-app.get('/location',(request,response)=>{
+app.get('../location',(request,response)=>{
     const data = require('./data/location.json');
 let city=request.query.city;
 let newLoc =new Location(city ,data);
