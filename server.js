@@ -1,14 +1,18 @@
 'use strict'
 
-const server=require('express');
-const cors=require('cors');
-const { request, response} = require('express');
 require('dotenv').config();
-
+const server=require('express');
+const cors =require('cors');
 const app=server();
 app.use(cors());
 
-const PORT=process.env.PORT||3200 ;
+const PORT=process.env.PORT||3000 ;
+
+
+app.listen(PORT, ()=>{
+  console.log('Server is listening to port ', PORT);
+});
+
 
 //home page
 app.get('/',(request,response)=>{
@@ -30,29 +34,19 @@ response.send(newLoc);
 
 //route 2
 // http://localhost:3200/weather?city=amman
-// app.get('/weather',(request,response)=>{
+app.get('/weather',(request,response)=>{
  
-//   const data = require('./data/weather.json');
-//   //let city=request.query.city;
-//   let newWeather = new Weather(data);
-//   response.send(newWeather);
-//   });
-
-/*
-[
-  {
-    "forecast": "Partly cloudy until afternoon.",
-    "time": "Mon Jan 01 2001"
-  },
-  {
-    "forecast": "Mostly cloudy in the morning.",
-    "time": "Tue Jan 02 2001"
-  },
-  ...
-]
+  const weather = require('./data/weather.json');
+  
+  const data=weather.data;
+  data.forEach((element,index)=>{
+    let newWeather = new Weather(data , index);
+  });
+  response.send(arrayWeather);
+  });
 
 
-*/
+
 
 function Location (city,data){
     this.search_query=city;
@@ -61,18 +55,23 @@ function Location (city,data){
     this.longitude=data[0].lon;
 }
 
-// function Weather (data){
-//   this.forecast=data.data[0].description;
-//   this.time=data.data[0].valid_date;
-// }
+
+
+let arrayWeather=[];
+
+function Weather (data,index){
+  this.forecast=data[index].weather.description;
+  this.time=data[index].datetime;
+  arrayWeather.push(this)
+}
+
 
 
 // remain routes
 app.all('*', (request, response) =>{
-    response.status(404).send('page not found');
+    response.status(404).send('Sorry, page not found');
   });
-  
 
-app.listen(PORT, ()=>{
-    console.log('Server is listening to port ', PORT);
-  });
+  // ERORR
+
+  
