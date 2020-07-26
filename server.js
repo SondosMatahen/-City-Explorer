@@ -20,9 +20,10 @@ app.get('/',(request,response)=>{
 //route 1
 // http://localhost:3200/location?city=amman
 app.get('/location',(request,response)=>{
+  console.log('ll')
 const data = require('./data/location.json');
 let city=request.query.city;
-let newLoc =new Location(city ,data);
+let newLoc = new Location(city ,data);
 response.send(newLoc);
 });
 /*
