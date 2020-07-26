@@ -21,7 +21,7 @@ app.get('/',(request,response)=>{
 // http://localhost:3200/location?city=amman
 app.get('/location',(request,response)=>{
  
-const data = require('data/location.json');
+const data = require('./data/location.json');
 let city=request.query.city;
 let newLoc = new Location(city ,data);
 response.send(newLoc);
@@ -62,10 +62,8 @@ function Location (city,data){
 }
 
 // function Weather (data){
-//   this.search_query=city;
-//   this.formatted_query=data[0].display_name;
-//   this.latitude=data[0].lat;
-//   this.longitude=data[0].lon;
+//   this.forecast=data.data[0].description;
+//   this.time=data.data[0].valid_date;
 // }
 
 
