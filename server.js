@@ -20,42 +20,38 @@ app.get('/',(request,response)=>{
 //route 1
 // http://localhost:3200/location?city=amman
 app.get('/location',(request,response)=>{
-  console.log('ll')
-const data = require('./data/location.json');
+ 
+const data = require('data/location.json');
 let city=request.query.city;
 let newLoc = new Location(city ,data);
 response.send(newLoc);
 });
+
+
+//route 2
+// http://localhost:3200/weather?city=amman
+// app.get('/weather',(request,response)=>{
+ 
+//   const data = require('./data/weather.json');
+//   //let city=request.query.city;
+//   let newWeather = new Weather(data);
+//   response.send(newWeather);
+//   });
+
 /*
-{
-  "search_query": "seattle",
-  "formatted_query": "Seattle, WA, USA",
-  "latitude": "47.606210",
-  "longitude": "-122.332071"
-}
-
-
 [
-    {
-      "place_id": "222943963",
-      "licence": "https://locationiq.com/attribution",
-      "osm_type": "relation",
-      "osm_id": "237662",
-      "boundingbox": [
-        "47.802219",
-        "47.853569",
-        "-122.34211",
-        "-122.261618"
-      ],
-      "lat": "47.8278656",
-      "lon": "-122.3053932",
-      "display_name": "Lynnwood, Snohomish County, Washington, USA",
-      "class": "place",
-      "type": "city",
-      "importance": 0.61729106268039,
-      "icon": "https://locationiq.org/static/images/mapicons/poi_place_city.p.20.png"
-    }
-  ]
+  {
+    "forecast": "Partly cloudy until afternoon.",
+    "time": "Mon Jan 01 2001"
+  },
+  {
+    "forecast": "Mostly cloudy in the morning.",
+    "time": "Tue Jan 02 2001"
+  },
+  ...
+]
+
+
 */
 
 function Location (city,data){
@@ -64,6 +60,13 @@ function Location (city,data){
     this.latitude=data[0].lat;
     this.longitude=data[0].lon;
 }
+
+// function Weather (data){
+//   this.search_query=city;
+//   this.formatted_query=data[0].display_name;
+//   this.latitude=data[0].lat;
+//   this.longitude=data[0].lon;
+// }
 
 
 // remain routes
