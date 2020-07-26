@@ -18,7 +18,8 @@ app.get('/',(request,response)=>{
 
 
 //route 1
-app.get('../location',(request,response)=>{
+// http://localhost:3200/location?city=amman
+app.get('/location',(request,response)=>{
     const data = require('./data/location.json');
 let city=request.query.city;
 let newLoc =new Location(city ,data);
