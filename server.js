@@ -3,6 +3,7 @@
 require('dotenv').config();
 const server=require('express');
 const cors =require('cors');
+const { request, response } = require('express');
 const app=server();
 app.use(cors());
 
@@ -23,10 +24,16 @@ app.get('/',(request,response)=>{
 
 //route 1
 // http://localhost:3200/location?city=amman
-app.get('/location',(request,response)=>{
+app.get('/location', (request,response, next)=>{
  
 const data = require('./data/location.json');
 let city=request.query.city;
+try {
+  if (!city) throw new Error();
+  if (!isNaN(city)) throw new Error();
+} catch(err) {
+  next(err);
+}
 let newLoc = new Location(city ,data);
 response.send(newLoc);
 });
@@ -74,4 +81,6 @@ app.all('*', (request, response) =>{
 
   // ERORR
 
-  
+  app.use((error ,request,response,next)=>{
+    response.status(500).send('Sorry, something went wrong');
+  })
