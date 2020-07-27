@@ -5,6 +5,7 @@ const server=require('express');
 const cors =require('cors');
 const { request, response } = require('express');
 const app=server();
+const superagent=require('superagent');
 app.use(cors());
 
 const PORT=process.env.PORT||3000 ;
@@ -24,36 +25,133 @@ app.get('/',(request,response)=>{
 
 //route 1
 // http://localhost:3200/location?city=amman
-app.get('/location', (request,response, next)=>{
- 
-const data = require('./data/location.json');
-let city=request.query.city;
-try {
-  if (!city) throw new Error();
-  if (!isNaN(city)) throw new Error();
-} catch(err) {
-  next(err);
+
+app.get('/location',handelLoc);
+
+function handelLoc(request,response){
+  let city=request.query.city;
+
+ getData(city).then(returndata=>{
+   response.send(returndata)
+ });
 }
-let newLoc = new Location(city ,data);
-response.send(newLoc);
-});
+
+function getData(city){
+
+let key=process.env.APIKEY;
+const idlocation= `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
+  
+
+  return superagent.get(idlocation)
+  .then(data =>{
+    return new Location(city, data.body);
+  })
+
+}
+
+
+// app.get('/location', (request,response, next)=>{
+ 
+// const data = require('./data/location.json');
+// let city=request.query.city;
+// let Apikey=process.env.APIKEY;
+
+// const idlocation= `https://eu1.locationiq.com/v1/search.php?key=${Apikey}&q=${city}&format=json`
+
+// try {
+//   if (!city) throw new Error();
+//   if (!isNaN(city)) throw new Error();
+// } catch(err) {
+//   next(err);
+// }
+// let newLoc = new Location(city ,idlocation);
+// response.send(
+
+// );
+// });
+
+
 
 
 //route 2
 // http://localhost:3200/weather?city=amman
-app.get('/weather',(request,response)=>{
- 
-  const weather = require('./data/weather.json');
+
+app.get('/weather',weatherFun)
+
+function weatherFun(request,response){
+
+  // let city=request.query.city;
+  const lat = request.query.latitude;
+    const lon = request.query.longitude;
   
-  const data=weather.data;
-  data.forEach((element,index)=>{
-    let newWeather = new Weather(data , index);
-  });
-  response.send(arrayWeather);
-  });
+
+let KEY=process.env.WAPI;
+// let url=`https://api.weatherbit.io/v2.0/forecast/daily?${city}=amman&key=${process.env.WAPI}`;
+let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${KEY}`;
+
+// console.log("weather", weather);
+
+return superagent.get(url)
+.then(getdata =>{
+
+  let arrayWeather=[];
+  getdata.body.data.map(data=> {
+
+    let newWeather = new Weather(data);
+   arrayWeather.push(newWeather)
+    return arrayWeather;
+  }); 
+ 
+  response.send(arrayWeather)
+})
+}
+
+
+// app.get('/weather', handelWeather);
+
+// function handelWeather(req, res) {
+//   let city = req.query.city;
+
+//   getWeather(city).then( returnedData => {
+//     res.send(returnedData);
+//   }).catch((err) => {
+//     console.log(err.message);
+//   });
+// }
+
+// function getWeather(city) {
+//   Weather.all = [];
+
+//   let KEY = process.env.WAPI;
+
+//   let url = `https://api.weatherbit.io/v2.0/forecast/daily?city=${city}&key=${KEY}`;
+
+//   return superagent.get(url).then( data => {
+//     // console.log(data.body.data);
+//     return data.body.data.map( item => {
+//       // console.log(item.weather);
+//       return new Weather(city, item);
+//     });
+//   });
+// }
 
 
 
+
+
+// app.get('/weather',(request,response)=>{
+ 
+//   const weather = require('./data/weather.json');
+//   const data=weather.data;
+//   data.map((element,index)=>{
+//     let newWeather = new Weather(data , index);
+//   });
+//   response.send(arrayWeather);
+//   });
+
+
+// const KEY = process.env.TRAIL_API_KEY;
+// const URL = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=10&key=${KEY}`;
 
 function Location (city,data){
     this.search_query=city;
@@ -64,12 +162,13 @@ function Location (city,data){
 
 
 
-let arrayWeather=[];
 
-function Weather (data,index){
-  this.forecast=data[index].weather.description;
-  this.time=data[index].datetime;
-  arrayWeather.push(this)
+// let arrayWeather=[];
+function Weather (data){
+  this.forecast=data.weather.description;
+  this.time=data.valid_date;
+  // arrayWeather.push(this)
+  // this.time = new Date(data.valid_date).toDateString();
 }
 
 
@@ -80,7 +179,6 @@ app.all('*', (request, response) =>{
   });
 
   // ERORR
-
   app.use((error ,request,response,next)=>{
     response.status(500).send('Sorry, something went wrong');
   })
