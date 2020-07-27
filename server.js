@@ -159,9 +159,9 @@ function trailsFun(request, response) {
 
   // const lat = request.query.latitude;
   // const lon = request.query.longitude;
- const ID=request.query.id;
+ const id=request.query.id;
 
-  getTrials(ID)
+  getTrials(id)
   .then(data => {
     response.send(data)
   });
@@ -170,13 +170,13 @@ function trailsFun(request, response) {
 }
 
 
-function getTrials(ID) {
+function getTrials(id) {
 
   const KEY = process.env.Hiking;
-  // const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=10&key=${KEY}`;
-  const url =`https://www.hikingproject.com/data/get-trails-by-id?ids=${ID}&key=${KEY}`
+  // const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&key=${KEY}`;
+  const url =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
 
-
+console.log(url)
   return superagent.get(url)
     .then(datatrials => {
 
