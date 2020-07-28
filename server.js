@@ -157,11 +157,11 @@ app.get('/trails', trailsFun)
 
 function trailsFun(request, response) {
 
-  // const lat = request.query.latitude;
-  // const lon = request.query.longitude;
- const id=request.query.id;
+  const lat = request.query.latitude;
+  const lon = request.query.longitude;
+//  const id=request.query.id;
 
-  getTrials(id)
+  getTrials(lat,lon)
   .then(data => {
     response.send(data)
   });
@@ -170,11 +170,11 @@ function trailsFun(request, response) {
 }
 
 
-function getTrials(id) {
+function getTrials(lat,lon) {
 
   const KEY = process.env.Hiking;
-  // const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&key=${KEY}`;
-  const url =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
+  const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&key=${KEY}`;
+  // const url =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
 
 console.log(url)
   return superagent.get(url)
