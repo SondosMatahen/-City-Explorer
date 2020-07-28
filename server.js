@@ -4,16 +4,16 @@ require('dotenv').config();
 const server = require('express');
 const cors = require('cors');
 const { request, response } = require('express');
-const app = server();
 const superagent = require('superagent');
-app.use(cors());
+const pg = require('pg');
+
 
 const PORT = process.env.PORT || 3000;
 
+const client = new pg.Client(process.env.DATABASE_URL)
+const app = server();
+app.use(cors());
 
-app.listen(PORT, () => {
-  console.log('Server is listening to port ', PORT);
-});
 
 
 //home page
@@ -36,18 +36,49 @@ function handelLoc(request, response) {
   });
 }
 
+
+
 function getData(city) {
 
-  let key = process.env.APIKEY;
-  const idlocation = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
+  let sql = `SELECT * FROM locations Where search_query=$1`;
+  let assgin = [city];
 
+ return client.query(sql, assgin)
+    .then(results => {
 
-  return superagent.get(idlocation)
-    .then(data => {
-      return new Location(city, data.body);
+      if (results.rowCount) {
+        console.log('it saved ')
+        return results.rows[0];
+      }
+
+      else {
+        let key = process.env.APIKEY;
+        let idlocation = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
+        insert(idlocation).then((data) => {
+        
+        });
+
+        return superagent.get(idlocation)
+          .then(data => {
+            return new Location(city, data.body);
+          })
+      }
     })
+}
+
+
+
+function insert(idlocation) {
+
+  let sql = `INSERT INTO locations (search_query, formatted_query ,latitude, longitude) VALUES ($1,$2,$3,$4)`;
+  let save = [city, idlocation.formatted_query, idlocation.latitude, idlocation.longitude];
+
+   client.query(sql, save).then(result => {
+    return result;
+  })
 
 }
+
 
 
 // app.get('/location', (request,response, next)=>{
@@ -69,6 +100,8 @@ function getData(city) {
 
 // );
 // });
+
+
 
 
 
@@ -103,6 +136,9 @@ function weatherFun(request, response) {
       response.send(arrayWeather)
     })
 }
+
+
+
 
 
 // app.get('/weather', handelWeather);
@@ -150,6 +186,8 @@ function weatherFun(request, response) {
 
 
 
+
+
 //route 3
 // http://localhost:3200/trails
 
@@ -159,25 +197,23 @@ function trailsFun(request, response) {
 
   const lat = request.query.latitude;
   const lon = request.query.longitude;
-//  const id=request.query.id;
+  //  const id=request.query.id;
 
-  getTrials(lat,lon)
-  .then(data => {
-    response.send(data)
-  });
-
-
+  getTrials(lat, lon)
+    .then(data => {
+      response.send(data)
+    });
 }
 
 
-function getTrials(lat,lon) {
+function getTrials(lat, lon) {
 
   const KEY = process.env.Hiking;
-  const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&key=${KEY}`;
-  // const url =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
+  const url2 = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=100&key=${key}`;
+  // const url2 =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
 
-console.log(url)
-  return superagent.get(url)
+  // console.log(url2)
+  return superagent.get(url2)
     .then(datatrials => {
 
       let arr = [];
@@ -209,6 +245,7 @@ function Location(city, data) {
 //weather constroctur 
 // let arrayWeather=[];
 function Weather(data) {
+
   this.forecast = data.weather.description;
   this.time = data.valid_date;
   // arrayWeather.push(this)
@@ -219,6 +256,9 @@ function Weather(data) {
 
 //Trials constroctur 
 function Trials(data) {
+  // this.search_query = city;
+  // this.latitude = data.latitude;
+  // this.longitude = data.longitude;
   this.name = data.name;
   this.location = data.location;
   this.stars = data.stars;
@@ -231,6 +271,14 @@ function Trials(data) {
 }
 
 
+
+
+
+client.connect().then(() => {
+  app.listen(PORT, () => {
+    console.log('Server is listening to port ', PORT);
+  });
+});
 
 
 
