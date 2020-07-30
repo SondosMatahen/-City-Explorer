@@ -192,18 +192,6 @@ function getTrials(lat,lon) {
 }
 
 
-// function getTrials(lat, lon) {
-//   const TRAILS_KEY = process.env.Hiking;
-//   const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&key=${TRAILS_KEY}`;
-//   return superagent.get(url).then(trailsData => {
-//     let trailsInfo = trailsData.body.trails.map(element => {
-//       return new Trials(element);
-//     });
-//     return trailsInfo;
-//   });
-// }
-
-
 
 
 //Location constroctur 
