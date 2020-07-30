@@ -124,7 +124,6 @@ function weatherFun(request, response) {
 
   return superagent.get(url)
     .then(getdata => {
-
       let arrayWeather = [];
       getdata.body.data.map(data => {
 
