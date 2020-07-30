@@ -71,7 +71,7 @@ function getData(city) {
 // });
 
 
-
+let lat ,lon;
 
 //route 2
 // http://localhost:3000/weather?city=amman
@@ -81,8 +81,8 @@ app.get('/weather', weatherFun)
 function weatherFun(request, response) {
 
   // let city=request.query.city;
-  const lat = request.query.latitude;
-  const lon = request.query.longitude;
+   lat = request.query.latitude;
+   lon = request.query.longitude;
 
 
   let KEY = process.env.WAPI;
@@ -157,13 +157,13 @@ app.get('/trails', trailsFun)
 
 function trailsFun(request, response) {
 
-  const lat = request.query.latitude;
-  const lon = request.query.longitude;
+  let lat = request.query.latitude;
+  let lon = request.query.longitude;
 //  const id=request.query.id;
 
   getTrials(lat,lon)
   .then(data => {
-    response.send(data)
+    response.status(200).json(data)
   });
 
 
@@ -174,24 +174,34 @@ function getTrials(lat,lon) {
 
   const KEY = process.env.Hiking;
   const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&key=${KEY}`;
-  // const url =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
+//   // const url =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
 
-console.log(url)
+// console.log(url)
   return superagent.get(url)
     .then(datatrials => {
-
-      let arr = [];
-      datatrials.body.trails.map(element => {
+// console.log(datatrials.body.trails)
+      let arr = datatrials.body.trails.map(element => {
         let newTrial = new Trials(element);
-        arr.push(newTrial);
-        return arr;
+        // arr.push(newTrial);
+        return newTrial;
       })
 
-      response.send(arr)
+      return arr;
     })
 
 }
 
+
+// function getTrials(lat, lon) {
+//   const TRAILS_KEY = process.env.Hiking;
+//   const url = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&key=${TRAILS_KEY}`;
+//   return superagent.get(url).then(trailsData => {
+//     let trailsInfo = trailsData.body.trails.map(element => {
+//       return new Trials(element);
+//     });
+//     return trailsInfo;
+//   });
+// }
 
 
 
