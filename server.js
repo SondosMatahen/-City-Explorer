@@ -1,5 +1,4 @@
 'use strict'
-
 require('dotenv').config();
 const server = require('express');
 const cors = require('cors');
@@ -9,6 +8,7 @@ const pg = require('pg');
 
 
 const PORT = process.env.PORT || 3000;
+
 
 const client = new pg.Client(process.env.DATABASE_URL)
 const app = server();
@@ -222,12 +222,48 @@ function getTrials(lat, lon) {
         return arr;
       })
 
-      response.send(arr)
+      return arr
     })
 
 }
 
 
+
+
+
+//route 4
+// http://localhost:3000/movies?city=amman
+
+app.get('/movies', handelMov);
+
+function handelMov(request, response) {
+  let city = request.query.city;
+  getMovie(city).then(returndata => {
+    response.send(returndata)
+  });
+}
+
+
+function getMovie(lat, lon) {
+
+  const KEY = process.env.MoviKEY;
+  let url=`https://api.themoviedb.org/3/movie/550?api_key=${KEY}`;
+  
+
+  return superagent.get(url)
+    .then(dataMovie => {
+
+      let arr = [];
+      datatrials.body.trails.map(element => {
+        let newTrial = new Trials(element);
+        arr.push(newTrial);
+        return arr;
+      })
+
+      return arr
+    })
+
+}
 
 
 
@@ -255,9 +291,6 @@ function Weather(data) {
 
 //Trials constroctur 
 function Trials(data) {
-  // this.search_query = city;
-  // this.latitude = data.latitude;
-  // this.longitude = data.longitude;
   this.name = data.name;
   this.location = data.location;
   this.stars = data.stars;
@@ -270,7 +303,41 @@ function Trials(data) {
 }
 
 
+/*
+[
+  {
+    "title": "Sleepless in Seattle",
+    "overview": "A young boy who tries to set his dad up on a date after the death of his mother. He calls into a radio station to talk about his dad’s loneliness which soon leads the dad into meeting a Journalist Annie who flies to Seattle to write a story about the boy and his dad. Yet Annie ends up with more than just a story in this popular romantic comedy.",
+    "average_votes": "6.60",
+    "total_votes": "881",
+    "image_url": "https://image.tmdb.org/t/p/w500/afkYP15OeUOD0tFEmj6VvejuOcz.jpg",
+    "popularity": "8.2340",
+    "released_on": "1993-06-24"
+  },
+  {
+    "title": "Love Happens",
+    "overview": "Dr. Burke Ryan is a successful self-help author and motivational speaker with a secret. While he helps thousands of people cope with tragedy and personal loss, he secretly is unable to overcome the death of his late wife. It's not until Burke meets a fiercely independent florist named Eloise that he is forced to face his past and overcome his demons.",
+    "average_votes": "5.80",
+    "total_votes": "282",
+    "image_url": "https://image.tmdb.org/t/p/w500/pN51u0l8oSEsxAYiHUzzbMrMXH7.jpg",
+    "popularity": "15.7500",
+    "released_on": "2009-09-18"
+  },
+  ...
+]
 
+*/
+//Movies constroctur 
+function Movies(data) {
+  this.title = data.name;
+  this.overview = data.location;
+  this.star_votes = data.star_votes;
+  this.total_votes = data.trail_url;
+  this.image_url = data.conditions;
+  this.popularity = trail.conditionDate.split(" ")[0];
+  this.released_on = trail.conditionDate.split(" ")[1];
+
+}
 
 
 client.connect().then(() => {
