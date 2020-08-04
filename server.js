@@ -1,4 +1,5 @@
 'use strict'
+
 require('dotenv').config();
 const server = require('express');
 const cors = require('cors');
@@ -28,8 +29,10 @@ app.get('/', (request, response) => {
 
 app.get('/location', handelLoc);
 
+
 function handelLoc(request, response) {
   let city = request.query.city;
+  // console.log(city)
 
   getData(city).then(returndata => {
     response.send(returndata)
@@ -54,13 +57,15 @@ function getData(city) {
       else {
         let key = process.env.APIKEY;
         let idlocation = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
-        insert(idlocation).then((data) => {
+        // console.log(idlocation)
         
-        });
-
         return superagent.get(idlocation)
           .then(data => {
-            return new Location(city, data.body);
+            let newlocation= new Location(city, data.body);
+            insert(city,newlocation).then((data) => {
+             return newlocation;
+              });
+              return newlocation;
           })
       }
     })
@@ -68,12 +73,12 @@ function getData(city) {
 
 
 
-function insert(idlocation) {
+function insert(city,newlocation) {
 
   let sql = `INSERT INTO locations (search_query, formatted_query ,latitude, longitude) VALUES ($1,$2,$3,$4)`;
-  let save = [city, idlocation.formatted_query, idlocation.latitude, idlocation.longitude];
+  let save = [city, newlocation.formatted_query, newlocation.latitude, newlocation.longitude];
 
-   client.query(sql, save).then(result => {
+  return client.query(sql, save).then(result => {
     return result;
   })
 
@@ -124,6 +129,7 @@ function weatherFun(request, response) {
 
   return superagent.get(url)
     .then(getdata => {
+      // console.log(getdata);
       let arrayWeather = [];
       getdata.body.data.map(data => {
 
@@ -208,7 +214,7 @@ function trailsFun(request, response) {
 function getTrials(lat, lon) {
 
   const KEY = process.env.Hiking;
-  const url2 = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=100&key=${key}`;
+  const url2 = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=100&key=${KEY}`;
   // const url2 =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
 
   // console.log(url2)
@@ -216,12 +222,14 @@ function getTrials(lat, lon) {
     .then(datatrials => {
 
       let arr = [];
+      
       datatrials.body.trails.map(element => {
         let newTrial = new Trials(element);
         arr.push(newTrial);
+        // console.log(arr)
         return arr;
       })
-
+      // console.log(arr)
       return arr
     })
 
@@ -229,7 +237,7 @@ function getTrials(lat, lon) {
 
 
 
-
+/*
 
 //route 4
 // http://localhost:3000/movies?city=amman
@@ -267,6 +275,44 @@ function getMovie(lat, lon) {
 
 
 
+
+//route 5
+// http://localhost:3000/yelp?city=amman
+
+app.get('/yelp', handelylep);
+
+function handelylep(request, response) {
+  let lat = request.query.latitude;
+  let lon = request.query.longitude;
+
+  getYelp(lat,lon).then(returndata => {
+    response.send(returndata)
+  });
+}
+
+
+function getYelp(lat, lon) {
+
+  let url=`https://api.yelp.com/v3/businesses/search?term=restaurants&latitude=${lat}&longitude=${lon}&limit=5&offset=${offset}`;
+  
+  return superagent.get(url)
+    .then(datayelp => {
+
+      let arr = [];
+      datayelp.body.map(element => {
+        let newYelp = new Yelp(element);
+        arr.push(newYelp);
+        return arr;
+      });
+
+      return arr
+    });
+
+}
+
+
+*/
+
 //Location constroctur 
 function Location(city, data) {
   this.search_query = city;
@@ -280,7 +326,6 @@ function Location(city, data) {
 //weather constroctur 
 // let arrayWeather=[];
 function Weather(data) {
-
   this.forecast = data.weather.description;
   this.time = data.valid_date;
   // arrayWeather.push(this)
@@ -297,8 +342,8 @@ function Trials(data) {
   this.star_votes = data.star_votes;
   this.trail_url = data.trail_url;
   this.conditions = data.conditions;
-  this.condition_date = trail.conditionDate.split(" ")[0];
-  this.condition_time = trail.conditionDate.split(" ")[1];
+  this.condition_date = data.conditionDate.split(" ")[0];
+  this.condition_time = data.conditionDate.split(" ")[1];
 
 }
 
@@ -338,6 +383,23 @@ function Movies(data) {
   this.released_on = trail.conditionDate.split(" ")[1];
 
 }
+
+
+
+//Yelp constroctur 
+function Yelp(data) {
+  this.name = data.name;
+  this.image_url = data.image_url;
+  this.price = data.businesses.price;
+  this.rating =data.businesses.rating;
+  this.url = data.url;
+
+}
+
+
+
+
+
 
 
 client.connect().then(() => {
