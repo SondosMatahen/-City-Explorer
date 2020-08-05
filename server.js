@@ -17,11 +17,13 @@ app.use(cors());
 
 
 
+
+//---------------Routes-----------
+
 //home page
 app.get('/', (request, response) => {
   response.status(200).send('Home page')
 });
-
 
 
 //route 1
@@ -29,6 +31,39 @@ app.get('/', (request, response) => {
 
 app.get('/location', handelLoc);
 
+
+//route 2
+// http://localhost:3000/weather?lat=number&lon=number
+
+app.get('/weather', weatherFun)
+
+
+//route 3
+// http://localhost:3200/trails?lat=number&lon=number
+
+app.get('/trails', trailsFun)
+
+
+//route 4
+// http://localhost:3000/movies?city=amman
+
+app.get('/movies', handelMov);
+
+
+//route 5
+// http://localhost:3000/yelp?city=amman
+
+app.get('/yelp', handelylep);
+
+
+
+
+
+
+
+//---------------handelFunctions-----------
+
+//location function
 
 function handelLoc(request, response) {
   let city = request.query.city;
@@ -38,7 +73,6 @@ function handelLoc(request, response) {
     response.send(returndata)
   });
 }
-
 
 
 function getData(city) {
@@ -56,12 +90,13 @@ function getData(city) {
 
       else {
         let key = process.env.APIKEY;
-        let idlocation = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json`;
+        let idlocation = `https://eu1.locationiq.com/v1/search.php?key=${key}&q=${city}&format=json&addressdetails=1`;
         // console.log(idlocation)
         
         return superagent.get(idlocation)
           .then(data => {
             let newlocation= new Location(city, data.body);
+            // console.log('loc',newlocation.address)
             insert(city,newlocation).then((data) => {
              return newlocation;
               });
@@ -71,12 +106,12 @@ function getData(city) {
     })
 }
 
-
+//insert in database for location
 
 function insert(city,newlocation) {
 
-  let sql = `INSERT INTO locations (search_query, formatted_query ,latitude, longitude) VALUES ($1,$2,$3,$4)`;
-  let save = [city, newlocation.formatted_query, newlocation.latitude, newlocation.longitude];
+  let sql = `INSERT INTO locations (search_query, formatted_query ,latitude, longitude ,region) VALUES ($1,$2,$3,$4,$5)`;
+  let save = [city, newlocation.formatted_query, newlocation.latitude, newlocation.longitude , newlocation.address];
 
   return client.query(sql, save).then(result => {
     return result;
@@ -86,45 +121,16 @@ function insert(city,newlocation) {
 
 
 
-// app.get('/location', (request,response, next)=>{
 
-// const data = require('./data/location.json');
-// let city=request.query.city;
-// let Apikey=process.env.APIKEY;
-
-// const idlocation= `https://eu1.locationiq.com/v1/search.php?key=${Apikey}&q=${city}&format=json`
-
-// try {
-//   if (!city) throw new Error();
-//   if (!isNaN(city)) throw new Error();
-// } catch(err) {
-//   next(err);
-// }
-// let newLoc = new Location(city ,idlocation);
-// response.send(
-
-// );
-// });
-
-
-
-
-
-
-//route 2
-// http://localhost:3000/weather?city=amman
-
-app.get('/weather', weatherFun)
+//Weather function
 
 function weatherFun(request, response) {
 
-  // let city=request.query.city;
   const lat = request.query.latitude;
   const lon = request.query.longitude;
 
 
   let KEY = process.env.WAPI;
-  // let url=`https://api.weatherbit.io/v2.0/forecast/daily?${city}=amman&key=${process.env.WAPI}`;
   let url = `https://api.weatherbit.io/v2.0/forecast/daily?lat=${lat}&lon=${lon}&key=${KEY}`;
 
   return superagent.get(url)
@@ -146,57 +152,7 @@ function weatherFun(request, response) {
 
 
 
-// app.get('/weather', handelWeather);
-
-// function handelWeather(req, res) {
-//   let city = req.query.city;
-
-//   getWeather(city).then( returnedData => {
-//     res.send(returnedData);
-//   }).catch((err) => {
-//     console.log(err.message);
-//   });
-// }
-
-// function getWeather(city) {
-//   Weather.all = [];
-
-//   let KEY = process.env.WAPI;
-
-//   let url = `https://api.weatherbit.io/v2.0/forecast/daily?city=${city}&key=${KEY}`;
-
-//   return superagent.get(url).then( data => {
-//     // console.log(data.body.data);
-//     return data.body.data.map( item => {
-//       // console.log(item.weather);
-//       return new Weather(city, item);
-//     });
-//   });
-// }
-
-
-
-
-
-// app.get('/weather',(request,response)=>{
-
-//   const weather = require('./data/weather.json');
-//   const data=weather.data;
-//   data.map((element,index)=>{
-//     let newWeather = new Weather(data , index);
-//   });
-//   response.send(arrayWeather);
-//   });
-
-
-
-
-
-
-//route 3
-// http://localhost:3200/trails
-
-app.get('/trails', trailsFun)
+//Trails function
 
 function trailsFun(request, response) {
 
@@ -215,9 +171,7 @@ function getTrials(lat, lon) {
 
   const KEY = process.env.Hiking;
   const url2 = `https://www.hikingproject.com/data/get-trails?lat=${lat}&lon=${lon}&maxDistance=100&key=${KEY}`;
-  // const url2 =`https://www.hikingproject.com/data/get-trails-by-id?ids=${id}&key=${KEY}`
-
-  // console.log(url2)
+ 
   return superagent.get(url2)
     .then(datatrials => {
 
@@ -237,35 +191,30 @@ function getTrials(lat, lon) {
 
 
 
-/*
 
-//route 4
-// http://localhost:3000/movies?city=amman
-
-app.get('/movies', handelMov);
+//Movies function
 
 function handelMov(request, response) {
-  let city = request.query.city;
-  getMovie(city).then(returndata => {
+  let region = request.query.address;
+  getMovie(region).then(returndata => {
     response.send(returndata)
   });
 }
 
 
-function getMovie(lat, lon) {
+function getMovie(region) {
 
-  const KEY = process.env.MoviKEY;
-  let url=`https://api.themoviedb.org/3/movie/550?api_key=${KEY}`;
-  
+  let KEY = process.env.MoviKEY;
+
+   let url=`https://api.themoviedb.org/3/movie/top_rated?api_key=${KEY}&language=en-US&page=1&region=${region}`;
+  // console.log(url)
 
   return superagent.get(url)
     .then(dataMovie => {
 
-      let arr = [];
-      datatrials.body.trails.map(element => {
-        let newTrial = new Trials(element);
-        arr.push(newTrial);
-        return arr;
+      let arr =dataMovie.body.results.map(element => {
+        let newMovie = new Movies(element);
+                return newMovie;
       })
 
       return arr
@@ -276,42 +225,43 @@ function getMovie(lat, lon) {
 
 
 
-//route 5
-// http://localhost:3000/yelp?city=amman
+//Yelp function
 
-app.get('/yelp', handelylep);
-
-function handelylep(request, response) {
+function handelylep  (request, response) {
   let lat = request.query.latitude;
   let lon = request.query.longitude;
 
   getYelp(lat,lon).then(returndata => {
-    response.send(returndata)
+    response.status(200).json(returndata)
   });
 }
 
 
 function getYelp(lat, lon) {
-
-  let url=`https://api.yelp.com/v3/businesses/search?term=restaurants&latitude=${lat}&longitude=${lon}&limit=5&offset=${offset}`;
+ 
+  let KEY=process.env.YELPKEY
+  console.log(KEY);
+    let url= `https://api.yelp.com/v3/businesses/search?term=restaurants&latitude=${lat}&longitude=${lon}`
+ 
+  console.log('insideyelp',url)
   
   return superagent.get(url)
+  .set('Authorization',`Bearer ${KEY}`)
     .then(datayelp => {
-
-      let arr = [];
-      datayelp.body.map(element => {
-        let newYelp = new Yelp(element);
-        arr.push(newYelp);
-        return arr;
+      // console.log('yelpdata',datayelp)
+      let arr = datayelp.body.businesses.map(element => {
+        return new Yelp(element);
+   
       });
-
+    //  console.log(arr)
       return arr
     });
 
 }
 
 
-*/
+
+//-----------------Constructors ----------
 
 //Location constroctur 
 function Location(city, data) {
@@ -319,17 +269,16 @@ function Location(city, data) {
   this.formatted_query = data[0].display_name;
   this.latitude = data[0].lat;
   this.longitude = data[0].lon;
+  this.address=data[0].address.country_code.toUpperCase();
 }
 
 
 
 //weather constroctur 
-// let arrayWeather=[];
+
 function Weather(data) {
   this.forecast = data.weather.description;
-  this.time = data.valid_date;
-  // arrayWeather.push(this)
-  // this.time = new Date(data.valid_date).toDateString();
+  this.time = new Date(data.valid_date).toDateString();
 }
 
 
@@ -348,50 +297,27 @@ function Trials(data) {
 }
 
 
-/*
-[
-  {
-    "title": "Sleepless in Seattle",
-    "overview": "A young boy who tries to set his dad up on a date after the death of his mother. He calls into a radio station to talk about his dad’s loneliness which soon leads the dad into meeting a Journalist Annie who flies to Seattle to write a story about the boy and his dad. Yet Annie ends up with more than just a story in this popular romantic comedy.",
-    "average_votes": "6.60",
-    "total_votes": "881",
-    "image_url": "https://image.tmdb.org/t/p/w500/afkYP15OeUOD0tFEmj6VvejuOcz.jpg",
-    "popularity": "8.2340",
-    "released_on": "1993-06-24"
-  },
-  {
-    "title": "Love Happens",
-    "overview": "Dr. Burke Ryan is a successful self-help author and motivational speaker with a secret. While he helps thousands of people cope with tragedy and personal loss, he secretly is unable to overcome the death of his late wife. It's not until Burke meets a fiercely independent florist named Eloise that he is forced to face his past and overcome his demons.",
-    "average_votes": "5.80",
-    "total_votes": "282",
-    "image_url": "https://image.tmdb.org/t/p/w500/pN51u0l8oSEsxAYiHUzzbMrMXH7.jpg",
-    "popularity": "15.7500",
-    "released_on": "2009-09-18"
-  },
-  ...
-]
 
-*/
+
 //Movies constroctur 
 function Movies(data) {
-  this.title = data.name;
-  this.overview = data.location;
-  this.star_votes = data.star_votes;
-  this.total_votes = data.trail_url;
-  this.image_url = data.conditions;
-  this.popularity = trail.conditionDate.split(" ")[0];
-  this.released_on = trail.conditionDate.split(" ")[1];
+  this.title = data.title;
+  this.overview = data.overview;
+  this.average_votes = data.vote_average;
+  this.total_votes = data.vote_count;
+  this.image_url = `https://image.tmdb.org/t/p/w500${data.poster_path}`;
+  this.popularity = data.popularity;
+  this.released_on = data.release_date;
 
 }
-
 
 
 //Yelp constroctur 
 function Yelp(data) {
   this.name = data.name;
   this.image_url = data.image_url;
-  this.price = data.businesses.price;
-  this.rating =data.businesses.rating;
+  this.price = data.price;
+  this.rating =data.rating;
   this.url = data.url;
 
 }
@@ -400,7 +326,7 @@ function Yelp(data) {
 
 
 
-
+//*********
 
 client.connect().then(() => {
   app.listen(PORT, () => {
